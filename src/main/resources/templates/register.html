@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <title>Create Account – WorkNest</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div class="auth-page">
+
+  <!-- Left decorative panel -->
+  <div class="auth-panel-left">
+    <div class="auth-brand">Work<span>Nest</span></div>
+
+    <div class="auth-tagline-block">
+      <h2>Start your journey.<br>Land the role<br>you deserve.</h2>
+      <p>Create your free account in under a minute and start exploring hundreds of open roles from verified employers today.</p>
+    </div>
+
+    <ul class="auth-features">
+      <li>Free for candidates — always, no hidden fees</li>
+      <li>Instant access to all active job listings</li>
+      <li>Post unlimited jobs as a recruiter</li>
+      <li>Manage and update applications with ease</li>
+    </ul>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="auth-panel-right">
+    <div class="auth-form-wrap">
+      <h2>Create account</h2>
+      <p class="auth-subtitle">Join WorkNest for free — takes under a minute</p>
+
+      <form action="/register" method="post">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" name="name" id="name" placeholder="John Smith" required autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" name="email" id="email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" name="password" id="password" placeholder="Create a strong password" required autocomplete="new-password">
+        </div>
+
+        <div class="form-group">
+          <label for="role">I am joining as a</label>
+          <select name="role" id="role" required>
+            <option value="ROLE_CANDIDATE">Candidate — looking for work</option>
+            <option value="ROLE_RECRUITER">Recruiter — hiring talent</option>
+          </select>
+        </div>
+
+        <button type="submit" style="width:100%; padding:13px; font-size:.95rem; margin-top:4px; background:var(--violet); color:var(--surface); border:none; border-radius:var(--r-full); font-family:var(--font-body); font-weight:700; cursor:pointer; transition:background var(--t) var(--ease), box-shadow var(--t) var(--ease);">Create Free Account</button>
+      </form>
+
+      <!-- Success/Error messages (backend-bound) -->
+      <p th:if="${message}" th:text="${message}" style="color:var(--emerald); text-align:center; margin-top:15px; font-size:.85rem; font-weight:600;"></p>
+      <p th:if="${error}" th:text="${error}" class="error-msg"></p>
+
+      <div class="back-home" style="margin-top:24px;">
+        <span style="color:var(--slate-lt); font-size:.85rem;">Already have an account?&nbsp;</span>
+        <a href="/login" style="color:var(--violet-dk); font-weight:700; font-size:.85rem;">Sign in</a>
+      </div>
+
+      <div style="margin-top:12px; text-align:center;">
+        <a th:href="@{/}" style="color:var(--slate-lt); font-size:.8rem; font-weight:500;">Back to home</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

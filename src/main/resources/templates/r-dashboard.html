@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <title>Recruiter Dashboard – WorkNest</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="logo">Work<span>Nest</span><span class="logo-dot"></span></div>
+  <div class="nav-links">
+    <a href="/" style="color:var(--slate); font-size:.875rem; font-weight:600;">Home</a>
+    <a th:href="@{/logout}">Log Out</a>
+  </div>
+</nav>
+
+<!-- Toast Notification -->
+<div id="toast" th:if="${success}" th:text="${success}"
+     style="position:fixed; top:80px; right:24px; background:var(--emerald); color:#fff; padding:14px 20px; border-radius:var(--r-lg); font-size:.875rem; font-weight:700; box-shadow:var(--shadow-lg); z-index:999; display:flex; align-items:center; gap:10px; max-width:360px;">
+</div>
+<script>
+  const toast = document.getElementById('toast');
+  if (toast) {
+    setTimeout(() => { toast.style.transition='opacity .5s'; toast.style.opacity='0'; }, 3500);
+    setTimeout(() => toast.remove(), 4000);
+  }
+</script>
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <span class="page-header-eyebrow">Recruiter Dashboard</span>
+    <h1>Manage Jobs &amp; Applications</h1>
+    <p>Post new listings, review candidates, and update application statuses from one place.</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- POST A JOB -->
+  <div style="margin-top:40px;">
+    <h2>
+      <span class="section-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </span>
+      Post a New Job
+    </h2>
+  </div>
+
+  <div class="post-job-section">
+    <div class="post-job-header">
+      <div class="post-job-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <h3>New Job Listing</h3>
+    </div>
+
+    <!-- BACKEND BINDING UNCHANGED: form action, all input names, hidden field preserved -->
+    <form th:action="@{/recruiter/addjob}" method="post" id="postJobForm" onsubmit="return validateJobForm()">
+      <div id="form-error-msg"></div>
+
+      <input type="text"   name="jobTitle"           placeholder="Job Title *"                              required />
+      <input type="text"   name="jobDesc"            placeholder="Job Description *"                        required />
+      <input type="text"   name="jobLoc"             placeholder="Location *"                               required />
+      <input type="text"   name="jobCompany"         placeholder="Company *"                                required />
+      <input type="text"   name="jobSalary"          placeholder="Salary Range * (e.g. $50k–$70k)"          required />
+      <input type="text"   name="jobQualification"   placeholder="Required Qualification * (e.g. B.S. CS)"  required />
+      <input type="number" name="vacancy"            placeholder="Number of Vacancies *" min="1"            required />
+      <input type="date"   name="applicationDeadline" id="applicationDeadline"                              required />
+
+      <select name="jobType" id="jobType" required>
+        <option value="">-- Select Job Type * --</option>
+        <option value="Full-Time">Full-Time</option>
+        <option value="Part-Time">Part-Time</option>
+        <option value="Contract">Contract</option>
+        <option value="Internship">Internship</option>
+        <option value="Remote">Remote</option>
+      </select>
+
+      <input type="hidden" name="jobPostedBy" th:value="${session.currentUser.userName}" />
+
+      <button type="submit">Post Job Listing</button>
+    </form>
+  </div>
+
+  <script>
+    (function() {
+      var dl = document.getElementById('applicationDeadline');
+      if (dl) { dl.setAttribute('min', new Date().toISOString().split('T')[0]); }
+    })();
+
+    function validateJobForm() {
+      var errors = [];
+      var form = document.getElementById('postJobForm');
+      var fields = [
+        { name: 'jobTitle',           label: 'Job Title' },
+        { name: 'jobDesc',            label: 'Job Description' },
+        { name: 'jobLoc',             label: 'Location' },
+        { name: 'jobCompany',         label: 'Company' },
+        { name: 'jobSalary',          label: 'Salary' },
+        { name: 'jobQualification',   label: 'Required Qualification' },
+        { name: 'vacancy',            label: 'Number of Vacancies' },
+        { name: 'applicationDeadline',label: 'Application Deadline' },
+        { name: 'jobType',            label: 'Job Type' }
+      ];
+      fields.forEach(function(f) {
+        var el = form.elements[f.name];
+        if (!el || !el.value || el.value.trim() === '') errors.push(f.label + ' is required.');
+      });
+      var deadlineEl = form.elements['applicationDeadline'];
+      if (deadlineEl && deadlineEl.value) {
+        var today = new Date(); today.setHours(0,0,0,0);
+        if (new Date(deadlineEl.value) < today) errors.push('Application Deadline cannot be in the past.');
+      }
+      var vacEl = form.elements['vacancy'];
+      if (vacEl && vacEl.value && (isNaN(vacEl.value) || parseInt(vacEl.value) < 1))
+        errors.push('Number of Vacancies must be at least 1.');
+
+      var errDiv = document.getElementById('form-error-msg');
+      if (errors.length > 0) {
+        errDiv.innerHTML = 'Please fix the following:<ul style="margin:8px 0 0 20px;padding:0;">'
+                + errors.map(function(e){ return '<li style="margin-bottom:4px;">' + e + '</li>'; }).join('')
+                + '</ul>';
+        errDiv.style.display = 'block';
+        errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+      }
+      errDiv.style.display = 'none';
+      return true;
+    }
+  </script>
+
+
+  <!-- POSTED JOBS TABLE -->
+  <h2>
+    <span class="section-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    </span>
+    Posted Jobs
+    <span class="section-count" th:text="${#lists.size(jobs)} + ' jobs'"></span>
+  </h2>
+
+  <!-- BACKEND BINDING UNCHANGED: edit/delete form actions and jobId preserved -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Type</th>
+        <th>Company</th>
+        <th>Location</th>
+        <th>Salary</th>
+        <th>Vacancies</th>
+        <th>Deadline</th>
+        <th>Qualification</th>
+        <th>Posted By</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:if="${#lists.isEmpty(jobs)}">
+        <td colspan="11" style="text-align:center; color:var(--slate-lt); padding:40px; font-size:.9rem;">No jobs posted yet. Use the form above to post your first listing.</td>
+      </tr>
+      <tr th:each="job : ${jobs}">
+        <td style="font-family:var(--font-mono); font-size:.78rem; color:var(--slate-lt);" th:text="${job.jobId}"></td>
+        <td th:text="${job.jobTitle}"></td>
+        <td>
+          <span th:if="${job.jobType != null}" th:text="${job.jobType}" class="job-type-badge"></span>
+          <span th:if="${job.jobType == null}" class="job-type-badge jt-none">—</span>
+        </td>
+        <td th:text="${job.jobCompany}"></td>
+        <td th:text="${job.jobLoc}"></td>
+        <td th:text="${job.jobSalary}"></td>
+        <td style="text-align:center;" th:text="${job.vacancy != null ? job.vacancy : '—'}"></td>
+        <td>
+            <span th:if="${job.applicationDeadline != null}"
+                  th:text="${#temporals.format(job.applicationDeadline, 'dd MMM yyyy')}"
+                  style="font-family:var(--font-mono); font-size:.78rem;">
+            </span>
+          <span th:if="${job.applicationDeadline == null}" style="color:var(--slate-lt);">—</span>
+        </td>
+        <td th:text="${job.jobQualification}"></td>
+        <td style="font-size:.8rem; color:var(--slate-lt);" th:text="${job.jobPostedBy}"></td>
+        <td style="white-space:nowrap; min-width:170px; padding:14px 20px;">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <form method="get" th:action="@{/recruiter/editjob}" style="display:inline; margin:0;">
+              <input type="hidden" name="jobId" th:value="${job.jobId}" />
+              <button type="submit" class="btn btn-edit">&#9998; Edit</button>
+            </form>
+            <button type="button" class="btn btn-delete" th:onclick="'showDeleteModal(' + ${job.jobId} + ')'">&#128465; Delete</button>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- CANDIDATES TABLE -->
+  <h2>
+    <span class="section-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </span>
+    Registered Candidates
+    <span class="section-count" th:text="${#lists.size(candidates)} + ' total'"></span>
+  </h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Full Name</th>
+        <th>Email Address</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:if="${#lists.isEmpty(candidates)}">
+        <td colspan="3" style="text-align:center; color:var(--slate-lt); padding:32px;">No candidates registered yet.</td>
+      </tr>
+      <tr th:each="candidate : ${candidates}">
+        <td style="font-family:var(--font-mono); font-size:.78rem; color:var(--slate-lt);" th:text="${candidate.userId}"></td>
+        <td th:text="${candidate.userName}"></td>
+        <td style="color:var(--slate-lt);" th:text="${candidate.email}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- APPLICATIONS RECEIVED -->
+  <h2>
+    <span class="section-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+    </span>
+    Applications Received
+    <span class="section-count" th:text="${#lists.size(applications)} + ' total'"></span>
+  </h2>
+
+  <!-- BACKEND BINDING UNCHANGED: updatestatus action, appId, status select, statuses variable preserved -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+      <tr>
+        <th>App. ID</th>
+        <th>Job Title</th>
+        <th>Candidate</th>
+        <th>Resume</th>
+        <th>Applied</th>
+        <th>Status</th>
+        <th>Update Status</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:if="${#lists.isEmpty(applications)}">
+        <td colspan="7" style="text-align:center; color:var(--slate-lt); padding:40px; font-size:.9rem;">No applications received yet.</td>
+      </tr>
+      <tr th:each="app : ${applications}">
+        <td style="font-family:var(--font-mono); font-size:.78rem; color:var(--slate-lt);" th:text="${app.applicantionId}"></td>
+        <td th:text="${app.job.jobTitle}"></td>
+        <td th:text="${app.users.userName}"></td>
+        <td><a th:href="${app.resume}" target="_blank">View</a></td>
+        <td style="font-family:var(--font-mono); font-size:.78rem; color:var(--slate-lt);"
+            th:text="${#temporals.format(app.appliedAt, 'dd MMM yyyy')}"></td>
+        <td>
+            <span th:with="st=${app.status != null ? app.status.name() : 'APPLIED'}"
+                  th:text="${st}"
+                  th:classappend="${st == 'APPLIED'      ? 'badge-applied'      :
+                                   st == 'UNDER_REVIEW' ? 'badge-under-review' :
+                                   st == 'SHORTLISTED'  ? 'badge-shortlisted'  :
+                                   st == 'REJECTED'     ? 'badge-rejected'     :
+                                   st == 'ACCEPTED'     ? 'badge-accepted'     : 'badge-applied'}"
+                  class="status-badge">
+            </span>
+        </td>
+        <td>
+          <form th:action="@{/recruiter/updatestatus}" method="post" style="display:flex; gap:8px; align-items:center;">
+            <input type="hidden" name="appId" th:value="${app.applicantionId}" />
+            <select name="status">
+              <option th:each="s : ${statuses}"
+                      th:value="${s}"
+                      th:text="${s}"
+                      th:selected="${s == app.status}">
+              </option>
+            </select>
+            <button type="submit" class="btn btn-edit" style="padding:7px 14px; font-size:.78rem; white-space:nowrap;">Update</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- end .container -->
+
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" style="display:none; position:fixed; inset:0; background:rgba(26,16,51,.75); backdrop-filter:blur(4px); z-index:1000; justify-content:center; align-items:center;">
+  <div class="delete-modal-inner">
+    <div style="width:52px; height:52px; background:var(--rose-lt); border-radius:var(--r-xl); display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </div>
+    <h3 style="font-family:var(--font-head); font-size:1.2rem; font-weight:800; color:var(--ink); margin-bottom:10px; letter-spacing:-.02em;">Delete Job Listing?</h3>
+    <p style="color:var(--slate-lt); font-size:.875rem; margin-bottom:28px; line-height:1.6;">This will permanently remove the job and all associated data. This action cannot be undone.</p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button onclick="closeDeleteModal()"
+              style="padding:10px 24px; border-radius:var(--r-full); border:1.5px solid var(--border); background:var(--surface); cursor:pointer; font-size:.875rem; font-weight:700; color:var(--slate); font-family:var(--font-body);">
+        Cancel
+      </button>
+      <a id="confirmDeleteBtn" href="#"
+         style="padding:10px 24px; border-radius:var(--r-full); background:var(--rose); color:var(--surface); font-size:.875rem; font-weight:700; display:inline-flex; align-items:center; gap:6px; transition:background .18s; font-family:var(--font-body);">
+        Delete Permanently
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showDeleteModal(jobId) {
+    document.getElementById('confirmDeleteBtn').href = '/recruiter/deletejob?jobId=' + jobId;
+    document.getElementById('deleteModal').style.display = 'flex';
+  }
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+  }
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+</script>
+
+</body>
+</html>

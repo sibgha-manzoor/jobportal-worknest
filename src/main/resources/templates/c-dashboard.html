@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <title>My Dashboard – WorkNest</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="logo">Work<span>Nest</span><span class="logo-dot"></span></div>
+  <div class="nav-links">
+    <a href="/" style="color:var(--slate); font-size:.875rem; font-weight:600;">Home</a>
+    <a th:href="@{/logout}">Log Out</a>
+  </div>
+</nav>
+
+<!-- Toast Notifications (backend-bound) -->
+<div th:if="${success}" id="toast-success"
+     style="position:fixed; top:80px; right:24px; background:var(--emerald); color:#fff; padding:14px 20px; border-radius:var(--r-lg); font-size:.875rem; font-weight:700; box-shadow:var(--shadow-lg); z-index:999; display:flex; align-items:center; gap:10px; max-width:360px; animation: slideInRight .35s cubic-bezier(.34,1.56,.64,1);"
+     th:text="${success}"></div>
+<div th:if="${error}" id="toast-error"
+     style="position:fixed; top:80px; right:24px; background:var(--rose); color:#fff; padding:14px 20px; border-radius:var(--r-lg); font-size:.875rem; font-weight:700; box-shadow:var(--shadow-lg); z-index:999; display:flex; align-items:center; gap:10px; max-width:360px;"
+     th:text="${error}"></div>
+
+<style>
+  @keyframes slideInRight {
+    from { opacity:0; transform:translateX(20px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+</style>
+
+<script>
+  ['toast-success','toast-error'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      setTimeout(() => { el.style.transition='opacity .5s'; el.style.opacity='0'; }, 3500);
+      setTimeout(() => el.remove(), 4000);
+    }
+  });
+</script>
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <span class="page-header-eyebrow">Candidate Dashboard</span>
+    <h1>Browse &amp; Apply to Jobs</h1>
+    <p>Find roles that match your skills and track your applications in real time.</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Job Search -->
+  <!-- BACKEND BINDING UNCHANGED: form action, input name "keyword" preserved -->
+  <div style="margin-top:40px;">
+    <form th:action="@{/candidate/cdashboard}" method="get" class="search-form">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--slate-lt); flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" name="keyword" th:value="${keyword}"
+             placeholder="Search by title, company, location or job type..." />
+      <button type="submit" class="btn-apply">Search</button>
+      <a th:href="@{/candidate/cdashboard}" class="btn-clear" th:if="${keyword != null and !keyword.isEmpty()}">Clear</a>
+    </form>
+  </div>
+
+  <!-- Available Jobs Section -->
+  <h2>
+    <span class="section-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    </span>
+    Available Jobs
+    <span th:if="${keyword != null and !keyword.isEmpty()}"
+          style="font-size:.8rem; font-weight:500; color:var(--slate-lt);">
+      — results for "<span th:text="${keyword}"></span>"
+    </span>
+    <span class="section-count" th:text="${#lists.size(jobs)} + ' listings'"></span>
+  </h2>
+
+  <!-- Job Cards Grid -->
+  <!-- BACKEND BINDING UNCHANGED: form action /candidate/apply, hidden jobId, resume input name preserved -->
+  <div class="jobs-grid">
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(jobs)}" class="empty-state">
+      <span class="empty-state-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--slate-lt)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <strong style="display:block; margin-bottom:6px; color:var(--ink-mid);">No jobs found</strong>
+      No jobs match your search. Try different keywords or <a th:href="@{/candidate/cdashboard}" style="color:var(--violet-dk); font-weight:700;">clear the filter</a>.
+    </div>
+
+    <!-- Job cards -->
+    <div th:each="job : ${jobs}" class="job-card">
+
+      <div class="job-card-header">
+        <!-- Company logo initials -->
+        <div class="job-card-company-logo"
+             th:text="${job.jobCompany != null and !job.jobCompany.isEmpty() ? job.jobCompany.substring(0,1).toUpperCase() : '?'}">
+        </div>
+        <div class="job-card-badges">
+          <span th:if="${job.jobType != null}" th:text="${job.jobType}" class="job-type-badge"></span>
+          <span th:if="${job.jobType == null}" class="job-type-badge jt-none">—</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="job-card-title" th:text="${job.jobTitle}">Job Title</div>
+        <div class="job-card-company" th:text="${job.jobCompany}">Company Name</div>
+      </div>
+
+      <div class="job-card-meta">
+        <span class="job-card-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span th:text="${job.jobLoc}">Location</span>
+        </span>
+        <span class="job-card-meta-item" th:if="${job.jobQualification != null}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <span th:text="${job.jobQualification}">Qualification</span>
+        </span>
+        <span class="job-card-meta-item" th:if="${job.vacancy != null}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span th:text="${job.vacancy} + ' vacancies'">Vacancies</span>
+        </span>
+      </div>
+
+      <div class="job-card-footer">
+        <span class="job-card-salary" th:text="${job.jobSalary}">Salary</span>
+        <span class="job-card-deadline" th:if="${job.applicationDeadline != null}">
+          Deadline&nbsp;
+          <span th:text="${#temporals.format(job.applicationDeadline, 'dd MMM yyyy')}"
+                th:classappend="${job.applicationDeadline.isBefore(T(java.time.LocalDate).now())} ? 'deadline-expired' : 'deadline-active'">
+          </span>
+        </span>
+        <span class="job-card-deadline" th:if="${job.applicationDeadline == null}" style="color:var(--slate-lt);">Open deadline</span>
+      </div>
+
+      <!-- Apply section -->
+      <div class="job-card-apply">
+
+        <!-- View Description Button -->
+        <button type="button" class="btn-view-desc"
+                th:attr="onclick='openDescModal(' + ${job.jobId} + ')'"  >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          View Description
+        </button>
+
+        <!-- Hidden data for modal -->
+        <div style="display:none;"
+             th:id="'desc-data-' + ${job.jobId}"
+             th:attr="data-title=${job.jobTitle},
+                      data-company=${job.jobCompany},
+                      data-type=${job.jobType},
+                      data-desc=${job.jobDesc}">
+        </div>
+
+        <!-- Deadline passed -->
+        <div th:if="${job.applicationDeadline != null and job.applicationDeadline.isBefore(T(java.time.LocalDate).now())}"
+             class="deadline-passed-badge">
+          Applications Closed
+        </div>
+
+        <!-- Apply form (open) -->
+        <form th:if="${job.applicationDeadline == null or !job.applicationDeadline.isBefore(T(java.time.LocalDate).now())}"
+              th:action="@{/candidate/apply}" method="post">
+          <input type="hidden" name="jobId" th:value="${job.jobId}" />
+          <input type="text" name="resume" placeholder="Paste your resume or portfolio URL" required />
+          <button type="submit" class="btn-apply" style="width:100%; padding:10px;">Apply Now</button>
+        </form>
+      </div>
+
+    </div><!-- end .job-card -->
+  </div><!-- end .jobs-grid -->
+
+
+  <!-- My Applications -->
+  <h2>
+    <span class="section-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </span>
+    My Applications
+    <span class="section-count" th:text="${#lists.size(applications)} + ' total'"></span>
+  </h2>
+
+  <!-- BACKEND BINDING UNCHANGED -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+      <tr>
+        <th>Job Title</th>
+        <th>Type</th>
+        <th>Company</th>
+        <th>Resume</th>
+        <th>Applied</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:if="${#lists.isEmpty(applications)}">
+        <td colspan="7" style="text-align:center; color:var(--slate-lt); padding:40px; font-size:.9rem;">
+          You haven't applied to any jobs yet. <a th:href="@{/candidate/cdashboard}" style="color:var(--violet-dk); font-weight:700;">Browse jobs above</a>
+        </td>
+      </tr>
+      <tr th:each="app : ${applications}">
+        <td th:text="${app.job.jobTitle}"></td>
+        <td>
+          <span th:if="${app.job.jobType != null}" th:text="${app.job.jobType}" class="job-type-badge"></span>
+          <span th:if="${app.job.jobType == null}" class="job-type-badge jt-none">—</span>
+        </td>
+        <td th:text="${app.job.jobCompany}"></td>
+        <td>
+          <a th:href="${app.resume}" target="_blank">View</a>
+        </td>
+        <td style="font-family:var(--font-mono); font-size:.78rem; color:var(--slate-lt);"
+            th:text="${#temporals.format(app.appliedAt, 'dd MMM yyyy')}"></td>
+        <td>
+            <span th:with="st=${app.status != null ? app.status.name() : 'APPLIED'}"
+                  th:text="${st}"
+                  th:classappend="${st == 'APPLIED'      ? 'badge-applied'      :
+                                   st == 'UNDER_REVIEW' ? 'badge-under-review' :
+                                   st == 'SHORTLISTED'  ? 'badge-shortlisted'  :
+                                   st == 'REJECTED'     ? 'badge-rejected'     :
+                                   st == 'ACCEPTED'     ? 'badge-accepted'     : 'badge-applied'}"
+                  class="status-badge">
+            </span>
+        </td>
+        <td>
+          <a th:href="@{'/candidate/cancel/' + ${app.applicantionId}}" class="btn btn-delete">Cancel</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- end .container -->
+
+<!-- ── Job Description Modal ── -->
+<div id="desc-modal-overlay" class="desc-modal-overlay" onclick="closeDescModal(event)">
+  <div class="desc-modal-inner" role="dialog" aria-modal="true" aria-labelledby="modal-job-title">
+    <button class="desc-modal-close" onclick="closeDescModalBtn()" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <span class="desc-modal-badge">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Job Description
+    </span>
+    <h2 class="desc-modal-title" id="modal-job-title">-</h2>
+    <p class="desc-modal-company" id="modal-job-company">-</p>
+    <hr class="desc-modal-divider" />
+    <p class="desc-modal-section-label">About this role</p>
+    <p class="desc-modal-body" id="modal-job-desc">-</p>
+  </div>
+</div>
+
+<script>
+  function openDescModal(jobId) {
+    var data = document.getElementById('desc-data-' + jobId);
+    if (!data) return;
+    document.getElementById('modal-job-title').textContent = data.dataset.title || '-';
+    var company = data.dataset.company || '-';
+    var type = data.dataset.type || '';
+    document.getElementById('modal-job-company').textContent = company + (type ? '  \u00b7  ' + type : '');
+    var desc = (data.dataset.desc || '').trim();
+    var descEl = document.getElementById('modal-job-desc');
+    if (desc) {
+      descEl.textContent = desc;
+      descEl.classList.remove('empty');
+    } else {
+      descEl.textContent = 'No description provided for this job.';
+      descEl.classList.add('empty');
+    }
+    document.getElementById('desc-modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDescModalBtn() {
+    document.getElementById('desc-modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeDescModal(e) {
+    if (e.target === document.getElementById('desc-modal-overlay')) closeDescModalBtn();
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDescModalBtn();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <title>WorkNest – Find Your Next Opportunity</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="logo">Work<span>Nest</span><span class="logo-dot"></span></div>
+  <div class="nav-links">
+    <a th:if="${session.currentUser == null}" href="/login">Sign In</a>
+    <a th:if="${session.currentUser == null}" href="/register">Get Started</a>
+
+    <a th:if="${session.currentUser != null and session.currentUser.role.contains(T(com.jobportal.Entities.Role).ROLE_RECRUITER)}" href="/recruiter/rdashboard">Dashboard</a>
+    <a th:if="${session.currentUser != null and session.currentUser.role.contains(T(com.jobportal.Entities.Role).ROLE_CANDIDATE)}" href="/candidate/cdashboard">Dashboard</a>
+    <a th:if="${session.currentUser != null}" href="/logout">Log Out</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Now Hiring — 10,000+ Active Listings</div>
+
+    <h1>Unlock Your <em>Dream Career</em><br>with WorkNest</h1>
+    <p class="tagline">
+      Discover opportunities that match your skills and ambitions.
+      Connect directly with top employers across every industry — fast, simple, and free.
+    </p>
+
+    <!-- Welcome banner for logged-in users -->
+    <p th:if="${session.currentUser != null}" class="welcome-msg">
+      Welcome back, <strong th:text="${session.currentUser.userName}">User</strong> — ready to explore new opportunities?
+    </p>
+
+    <!-- CTA for guests -->
+    <div th:if="${session.currentUser == null}" style="display:flex; gap:12px; flex-wrap:wrap; position:relative; z-index:1; margin-top:8px;">
+      <a href="/register" class="btn-apply btn" style="padding:14px 32px; font-size:.95rem;">Find Jobs Now</a>
+      <a href="/login" class="btn" style="background:rgba(255,255,255,.09); color:rgba(255,255,255,.78); border:1px solid rgba(255,255,255,.16); padding:14px 26px; font-size:.95rem;">Sign In</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-num">10K+</span>
+        <span class="hero-stat-label">Active Jobs</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">2.4K</span>
+        <span class="hero-stat-label">Companies</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">98%</span>
+        <span class="hero-stat-label">Match Rate</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">48hr</span>
+        <span class="hero-stat-label">Avg. Response</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features + CTA -->
+<div class="container">
+
+  <!-- Feature strip -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:56px; margin-bottom:64px;">
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <h3 style="font-family:var(--font-head); font-size:.95rem; font-weight:700; color:var(--ink); margin-bottom:6px;">Smart Search</h3>
+      <p style="font-size:.82rem; color:var(--slate-lt); line-height:1.65;">Filter by title, company, location, or job type. Find exactly what you are looking for in seconds.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      </div>
+      <h3 style="font-family:var(--font-head); font-size:.95rem; font-weight:700; color:var(--ink); margin-bottom:6px;">One-Click Apply</h3>
+      <p style="font-size:.82rem; color:var(--slate-lt); line-height:1.65;">Submit your resume link and apply to any open role instantly — no lengthy forms required.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <h3 style="font-family:var(--font-head); font-size:.95rem; font-weight:700; color:var(--ink); margin-bottom:6px;">Track Applications</h3>
+      <p style="font-size:.82rem; color:var(--slate-lt); line-height:1.65;">Follow every step of your application journey from submitted to accepted in real time.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <h3 style="font-family:var(--font-head); font-size:.95rem; font-weight:700; color:var(--ink); margin-bottom:6px;">Top Employers</h3>
+      <p style="font-size:.82rem; color:var(--slate-lt); line-height:1.65;">Roles from verified companies across technology, finance, healthcare, and every major industry.</p>
+    </div>
+
+  </div>
+
+  <!-- Recruiter CTA band -->
+  <div class="cta-band">
+    <div style="position:relative; z-index:1;">
+      <span class="cta-band-eyebrow">For Recruiters</span>
+      <h3>Hire faster.<br>Find better talent.</h3>
+      <p style="font-size:.875rem; color:rgba(255,255,255,.5); margin-top:10px; font-weight:400;">Post unlimited job listings and manage every applicant from one clean dashboard.</p>
+    </div>
+    <a href="/register" class="btn-cta">Post a Job Free</a>
+  </div>
+
+</div>
+
+</body>
+</html>
